@@ -9,8 +9,6 @@ import (
 
 const SearchDomain = "https://academkin.ru/vuz/list"
 
-
-
 func GetAllVuzUrlsInPage(page int) (urls []string) {
 	body := getBody(fmt.Sprintf("%s/%d", SearchDomain, page))
 	body.ForEach("div.high-schools-list a.media", func(i int, h *colly.HTMLElement) {

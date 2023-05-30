@@ -2,24 +2,41 @@ package main
 
 import (
 	"fmt"
-	"sync"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/SalomanYu/Academkin/src/database"
 	"github.com/SalomanYu/Academkin/src/logger"
 	"github.com/SalomanYu/Academkin/src/scraper"
+	"github.com/joho/godotenv"
 )
 
-var db database.Database
+var db *database.Database
+
+func init() {
+	logger.Log.Println("Program started.")
+	err := godotenv.Load("../.env")
+	if err != nil {
+		panic("Создайте файл с переменными окружения! .env")
+	}
+}
 
 func main() {
 	s := time.Now().Unix()
-	db = database.Database{}
-	logger.Log.Println("Program started.")
-	// start()
+	port, _ := strconv.Atoi(os.Getenv("POSTGRES_PORT"))
+	db = &database.Database{
+		Host:     os.Getenv("POSTGRES_HOST"),
+		Port:     port,
+		User:     os.Getenv("POSTGRES_USER"),
+		Password: os.Getenv("POSTGRES_PASS"),
+		Name:     os.Getenv("POSTGRES_DBNAME"),
+	}
+	db.InitDatabase()
+	start()
+
 	fmt.Println(time.Now().Unix()-s, "seconds")
 	logger.Log.Println(time.Now().Unix()-s, "seconds")
-	fmt.Scan(&s)
 }
 
 func start() {
@@ -42,17 +59,10 @@ func start() {
 
 func saveVuzInfo(vuzUrl string) {
 	vuz := scraper.GetVuz(vuzUrl)
-	specializationsUrls := scraper.GetAllVuzSpecializations(vuzUrl)
-	logger.Log.Println("Count url specs:", len(specializationsUrls))
-	fmt.Println("Count url specs:", len(specializationsUrls))
-	var wg sync.WaitGroup
-	wg.Add(len(specializationsUrls))
-	for _, item := range specializationsUrls {
-		go scraper.SaveSpecialization(item, &wg)
-	}
-	wg.Wait()
+	vuzSpecs := scraper.GetAllSpecualizations(vuzUrl)
 
-	// mongo.AddVuz(&vuz)
+	db.SaveVuz(vuz)
+	db.SaveVuzSpecializations(vuzSpecs)
 	logger.Log.Println("Save vuz:", vuz.FullName)
 
 }

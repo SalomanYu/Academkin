@@ -8,9 +8,9 @@ import (
 )
 
 func (d *Database) SaveVuz(vuz models.Vuz) {
-	query := fmt.Sprintf("INSERT INTO academkin_vuz(short_name, full_name, image, city, address, url) VALUES ($1, $2, $3, $4, $5, $6)")
+	query := fmt.Sprintf("INSERT INTO academkin_vuz(id, short_name, full_name, image, city, address, url) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT DO NOTHING;")
 	tx, _ := d.db.Begin()
-	_, err := d.db.Exec(query, vuz.ShortName, vuz.FullName, vuz.Logo, vuz.City, vuz.Locality, vuz.Url)
+	_, err := d.db.Exec(query, vuz.VuzId, vuz.ShortName, vuz.FullName, vuz.Logo, vuz.City, vuz.Locality, vuz.Url)
 	checkErr(err)
 	tx.Commit()
 	fmt.Printf("Успешно сохранили вуз:%s \n", vuz.FullName)

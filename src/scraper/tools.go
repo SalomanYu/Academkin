@@ -18,7 +18,7 @@ var Headers = map[string]string{
 
 func getBody(url string) (body *colly.HTMLElement) {
 	c := colly.NewCollector()
-	c.SetRequestTimeout(30 * time.Second)
+	c.SetRequestTimeout(60 * time.Second)
 	c.OnHTML("div.page-wrap", func(h *colly.HTMLElement) {
 		body = h
 	})
@@ -26,6 +26,16 @@ func getBody(url string) (body *colly.HTMLElement) {
 	return
 }
 
+func setSpecsToGroups(count int, specs []string) (groups [][]string) {
+	for i := 0; i < len(specs); i += count {
+		group := specs[i:]
+		if len(group) >= count {
+			group = group[:count]
+		}
+		groups = append(groups, group)
+	}
+	return
+}
 func checkErr(err error) {
 	if err != nil {
 		panic(err)

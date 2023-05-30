@@ -1,12 +1,14 @@
 package scraper
 
 import (
-	"github.com/SalomanYu/Academkin/src/logger"
-	"github.com/SalomanYu/Academkin/src/models"
+	"fmt"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/SalomanYu/Academkin/src/logger"
+	"github.com/SalomanYu/Academkin/src/models"
 
 	"github.com/gocolly/colly"
 )
@@ -18,12 +20,31 @@ type TableValues struct {
 	Qualification    string
 }
 
+var vuzSpecs = []models.Specialization{}
+
+func GetAllSpecualizations(vuzUrl string) []models.Specialization {
+	vuzSpecs = make([]models.Specialization, 0)
+	specializationsUrls := GetAllVuzSpecializations(vuzUrl)
+	groupSpecs := setSpecsToGroups(30, specializationsUrls)
+	fmt.Println("Count url specs:", len(specializationsUrls))
+
+	for _, group := range groupSpecs {
+		var wg sync.WaitGroup
+		wg.Add(len(group))
+		for _, item := range group {
+			go SaveSpecialization(item, &wg)
+		}
+		wg.Wait()
+
+	}
+	return vuzSpecs
+}
+
 func SaveSpecialization(url string, wg *sync.WaitGroup) {
 	specialization := GetSpecialization(url)
 	if len(specialization.Name) != 0 {
-		mongo.AddSpecialization(&specialization)
 		logger.Log.Println("Save spec:", specialization.Name)
-
+		vuzSpecs = append(vuzSpecs, specialization)
 	}
 	wg.Done()
 }
@@ -31,7 +52,7 @@ func SaveSpecialization(url string, wg *sync.WaitGroup) {
 func GetSpecialization(url string) (specialization models.Specialization) {
 	body := getBody(url)
 	if body == nil {
-		time.Sleep(1 * time.Second)
+		time.Sleep(3 * time.Second)
 		body = getBody(url)
 		if body == nil {
 			logger.Log.Println("Не смогли спарсить специализацию:", url)
@@ -79,10 +100,17 @@ func getTableValues(body *colly.HTMLElement) (values TableValues) {
 				switch title {
 				case "Форма обучения:":
 					values.FormEducation = h.Text
+					if values.FormEducation == "" {
+						values.FormEducation = "очная"
+					}
 				case "Срок обучения:":
 					values.Duration = h.Text
 				case "Уровень подготовки:":
 					values.PreparationLevel = h.Text
+					if values.PreparationLevel == "" {
+						values.PreparationLevel = "Бакалавр"
+					}
+
 				case "Квалификация:":
 					values.Qualification = h.Text
 				}

@@ -1,1 +1,4 @@
 src/info.log
+.env
+*.log
+*.xlsx
