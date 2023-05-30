@@ -3,7 +3,6 @@ package scraper
 import (
 	"github.com/SalomanYu/Academkin/src/logger"
 	"github.com/SalomanYu/Academkin/src/models"
-	"github.com/SalomanYu/Academkin/src/mongo"
 	"strconv"
 	"strings"
 	"sync"
@@ -13,20 +12,20 @@ import (
 )
 
 type TableValues struct {
-	FormEducation 		string
-	PreparationLevel 	string
-	Duration 			string
-	Qualification 		string
+	FormEducation    string
+	PreparationLevel string
+	Duration         string
+	Qualification    string
 }
 
-func SaveSpecialization(url string, wg *sync.WaitGroup) { 
+func SaveSpecialization(url string, wg *sync.WaitGroup) {
 	specialization := GetSpecialization(url)
 	if len(specialization.Name) != 0 {
 		mongo.AddSpecialization(&specialization)
 		logger.Log.Println("Save spec:", specialization.Name)
-		
-	} 
-	wg.Done()		
+
+	}
+	wg.Done()
 }
 
 func GetSpecialization(url string) (specialization models.Specialization) {
@@ -35,7 +34,7 @@ func GetSpecialization(url string) (specialization models.Specialization) {
 		time.Sleep(1 * time.Second)
 		body = getBody(url)
 		if body == nil {
-		logger.Log.Println("Не смогли спарсить специализацию:", url)	
+			logger.Log.Println("Не смогли спарсить специализацию:", url)
 			return
 		}
 	}
@@ -49,6 +48,7 @@ func GetSpecialization(url string) (specialization models.Specialization) {
 	specialization.Duration = tableValues.Duration
 	specialization.Qualification = tableValues.Qualification
 	specialization.FormEducation = tableValues.FormEducation
+	specialization.Url = url
 	specialization.PreparationLevel = tableValues.PreparationLevel
 	return
 }
@@ -77,10 +77,14 @@ func getTableValues(body *colly.HTMLElement) (values TableValues) {
 				title = h.Text
 			} else if i == 1 {
 				switch title {
-				case "Форма обучения:": values.FormEducation = h.Text
-				case "Срок обучения:": values.Duration = h.Text
-				case "Уровень подготовки:": values.PreparationLevel = h.Text
-				case "Квалификация:": values.Qualification = h.Text
+				case "Форма обучения:":
+					values.FormEducation = h.Text
+				case "Срок обучения:":
+					values.Duration = h.Text
+				case "Уровень подготовки:":
+					values.PreparationLevel = h.Text
+				case "Квалификация:":
+					values.Qualification = h.Text
 				}
 			}
 		})

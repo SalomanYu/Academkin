@@ -5,8 +5,7 @@ import (
 	"strings"
 )
 
-
-func GetVuz(url string) (vuz models.Vuz){
+func GetVuz(url string) (vuz models.Vuz) {
 	body := getBody(url)
 	vuz.VuzId = strings.Split(url, "/")[5]
 	vuz.FullName = body.ChildText("div.page-header h1 span")
@@ -14,6 +13,7 @@ func GetVuz(url string) (vuz models.Vuz){
 	vuz.Locality = body.ChildText("td[itemprop=streetAddress]")
 	vuz.City = body.ChildText("td[itemprop=addressLocality]")
 	vuz.Logo = body.ChildAttr("img.high-school-avatar", "src")
+	vuz.Url = url
 	if len(vuz.Logo) > 0 {
 		vuz.Logo = Domain + vuz.Logo
 	}

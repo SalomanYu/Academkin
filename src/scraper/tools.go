@@ -7,9 +7,9 @@ import (
 	"github.com/gocolly/colly"
 )
 
-
 var ReTextBetweenParentheses = regexp.MustCompile(`\(([^)]*)\)`)
 var ReFindDigits = regexp.MustCompile(`\d+`)
+
 const Domain = "https://academkin.ru"
 
 var Headers = map[string]string{
@@ -27,7 +27,7 @@ func getBody(url string) (body *colly.HTMLElement) {
 }
 
 func checkErr(err error) {
-	if err != nil{
+	if err != nil {
 		panic(err)
 	}
 }
